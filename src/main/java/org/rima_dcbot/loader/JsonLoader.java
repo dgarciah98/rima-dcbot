@@ -23,15 +23,15 @@ public class JsonLoader {
 		configUtil = ConfigurationUtil.getInstance();
 	}
 	
-	public Map<String, String> loadRhymes() throws IOException {
-		Map<String, String> rhymes = null;
+	public Map<String, String> loadWordplays() throws IOException {
+		Map<String, String> wordplays = null;
 		
 		try {
-			rhymes = om.readValue(new File(configUtil.getProperty("files.rhymes.path")), Map.class);
+			wordplays = om.readValue(new File(configUtil.getProperty("files.wordplays.path")), Map.class);
 		} catch (IOException e) {
 			System.out.println("Error reading file: " + e);
 		}
 		
-		return rhymes;
+		return wordplays;
 	}
 }
