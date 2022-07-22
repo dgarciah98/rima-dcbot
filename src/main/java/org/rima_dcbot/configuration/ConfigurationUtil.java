@@ -31,7 +31,6 @@ public class ConfigurationUtil {
 		return instance;
 	}
 	
-	
 	public String getProperty(String propertyName) throws IOException {
 		return properties.getProperty(propertyName);
 	}
