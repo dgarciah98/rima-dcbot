@@ -16,9 +16,9 @@ public class MessageListener extends ListenerAdapter {
 	
 	private JsonLoader loader;
 	
-	public MessageListener() {
+	public MessageListener(JsonLoader loader) {
 		super();
-		loader = new JsonLoader();
+		this.loader = loader;
 	}
 	
     @Override

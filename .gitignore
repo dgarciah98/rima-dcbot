@@ -4,6 +4,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 .env
+data/wordplays.json
 
 ### IntelliJ IDEA ###
 .idea/gradle.xml

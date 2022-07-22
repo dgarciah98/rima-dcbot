@@ -34,9 +34,13 @@ public class JsonLoader {
 			public void writeObjectFieldValueSeparator(JsonGenerator jg) throws IOException {
 				jg.writeRaw(": ");
 			}
+			@Override
+			public DefaultPrettyPrinter createInstance() {
+				return new DefaultPrettyPrinter(this);
+			}
 		});
 
-		wordplaysFile = Paths.get(ConfigurationUtil.getInstance().getProperty("files.wordplays.path")).toFile();
+		wordplaysFile = Paths.get(ConfigurationUtil.getInstance().getProperty("JSON_PATH")).toFile();
 	}
 
 	public Map<String, String> loadWordplays() throws IOException {
@@ -50,9 +54,19 @@ public class JsonLoader {
 	}
 
 	public void addWordplay(String suffix, String wordplay) throws IOException {
-		// Use loadWordplays instead of direct reference to wordplaysFile in case this is called before loadWordplays is ever called
-		loadWordplays().put(suffix, wordplay);
+		// Use loadWordplays instead of direct reference to wordplaysFile
+		// in case this is called before loadWordplays is ever called
+		Map<String, String> wordplays = loadWordplays();
+		wordplays.put(suffix, wordplay);
 		ow.writeValue(wordplaysFile, wordplays);
+		this.wordplays = wordplays;
+	}
+
+	public void removeWordplay(String suffix) throws IOException {
+		Map<String, String> wordplays = loadWordplays();
+		wordplays.remove(suffix);
+		ow.writeValue(wordplaysFile, wordplays);
+		this.wordplays = wordplays;
 	}
 
 }
