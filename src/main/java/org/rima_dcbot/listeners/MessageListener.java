@@ -21,8 +21,10 @@ public class MessageListener extends ListenerAdapter {
                 Map<String, String> json = new JsonLoader().loadWordplays();
                 String text = msg.getContentStripped().toLowerCase(Locale.ROOT);
                 String word = text.substring(text.lastIndexOf(" ") + 1);
-                if (json.containsKey(word))
-                    event.getChannel().sendMessage(json.get(word)).queue();
+                json.keySet().forEach(key -> {
+                    if(word.endsWith(key))
+                        event.getChannel().sendMessage(json.get(key)).queue();
+                });
 
             } catch (IOException e) {
                 System.out.println("Error reading file: " + e);

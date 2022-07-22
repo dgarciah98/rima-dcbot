@@ -15,15 +15,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class JsonLoader {
 	
-	private ObjectMapper om;
-	private ConfigurationUtil configUtil;
+	private static ObjectMapper om;
+	private static ConfigurationUtil configUtil;
 	
 	public JsonLoader() {
 		om = new ObjectMapper();
 		configUtil = ConfigurationUtil.getInstance();
 	}
 	
-	public Map<String, String> loadWordplays() throws IOException {
+	public static Map<String, String> loadWordplays() throws IOException {
 		Map<String, String> wordplays = null;
 		
 		try {
