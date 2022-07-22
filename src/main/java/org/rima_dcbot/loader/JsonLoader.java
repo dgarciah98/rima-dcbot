@@ -6,7 +6,10 @@ import java.util.Map;
 
 import org.rima_dcbot.configuration.ConfigurationUtil;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * JSON file loader
@@ -16,10 +19,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JsonLoader {
 	
 	private ObjectMapper om;
+	private ObjectWriter ow;
 	private ConfigurationUtil configUtil;
 	
 	public JsonLoader() {
 		om = new ObjectMapper();
+		ow = om.writer(new DefaultPrettyPrinter() {
+		    @Override
+		    public void writeObjectFieldValueSeparator(JsonGenerator jg) throws IOException {
+		        jg.writeRaw(": ");
+		    }
+		});
 		configUtil = ConfigurationUtil.getInstance();
 	}
 	
@@ -34,4 +44,16 @@ public class JsonLoader {
 		
 		return wordplays;
 	}
+	
+	public void saveWordplays(Map<String, String> wordplays) throws IOException {
+		ow.writeValue(new File(configUtil.getProperty("files.wordplays.path")), wordplays);
+	}
+	
+	public void addWordplay(String suffix, String wordplay) throws IOException {
+		// TODO find a better way to do this
+		Map<String, String> wordplays = loadWordplays();
+		wordplays.put(suffix, wordplay);
+		saveWordplays(wordplays);
+	}
+	
 }
