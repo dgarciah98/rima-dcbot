@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.rima_dcbot.listeners.MessageListener;
 import org.rima_dcbot.listeners.ReadyListener;
+import org.rima_dcbot.listeners.SlashCommandListener;
 
 import javax.security.auth.login.LoginException;
 
@@ -21,8 +22,11 @@ public class Bot {
                 )
                 .addEventListeners(new MessageListener())
                 .addEventListeners(new ReadyListener())
+                .addEventListeners(new SlashCommandListener())
                 .setActivity(Activity.listening("Lil B - 05 Fuck Em"))
                 .build();
+        bot.upsertCommand("start", "Makes the bot listen to messages again if it was stopped").queue();
+        bot.upsertCommand("stop", "Stops the bot from listening to messages").queue();
         bot.awaitReady();
     }
 
