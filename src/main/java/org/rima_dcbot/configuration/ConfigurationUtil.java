@@ -1,5 +1,7 @@
 package org.rima_dcbot.configuration;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -7,20 +9,10 @@ import java.util.Properties;
 public class ConfigurationUtil {
 
 	private static ConfigurationUtil instance;
-	private Properties properties;
+	private Dotenv dotenv;
 	
 	private ConfigurationUtil() {
-		properties = new Properties();
-		
-		InputStream file = getClass().getClassLoader().getResourceAsStream("config.properties");
-
-		if (file != null) {
-			try {
-				properties.load(file);
-			} catch (IOException e) {
-				System.out.println("Error loading properties: " + e);
-			}
-		}
+		dotenv = Dotenv.load();
 	}
 	
 	public static ConfigurationUtil getInstance() {
@@ -31,8 +23,7 @@ public class ConfigurationUtil {
 		return instance;
 	}
 	
-	
-	public String getProperty(String propertyName) throws IOException {
-		return properties.getProperty(propertyName);
+	public String getProperty(String propertyName) {
+		return dotenv.get(propertyName);
 	}
 }
