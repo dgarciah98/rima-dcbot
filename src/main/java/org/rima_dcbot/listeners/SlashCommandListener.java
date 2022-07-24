@@ -2,15 +2,15 @@ package org.rima_dcbot.listeners;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
+import org.rima_dcbot.bean.BlacklistedUser;
 import org.rima_dcbot.loader.JsonLoader;
 
 import java.io.IOException;
 import java.text.Normalizer;
-import java.util.Locale;
-import java.util.stream.Stream;
+import java.util.List;
 
 public class SlashCommandListener extends ListenerAdapter {
-	
 	private JsonLoader loader;
 	
 	public SlashCommandListener(JsonLoader loader) {
@@ -82,6 +82,22 @@ public class SlashCommandListener extends ListenerAdapter {
 				}
 				break;
 				
+			case "ignoreme":
+				try {
+					List<BlacklistedUser> blacklist = loader.loadBlacklist();
+					BlacklistedUser author = new BlacklistedUser(event.getUser());
+					if (blacklist.contains(author)) {
+						loader.whitelistUser(author);
+						event.reply("Ya no te estoy ignorando").setEphemeral(true).queue();
+					} else {
+						loader.blacklistUser(author);
+						event.reply("A partir de ahora te ignoro").setEphemeral(true).queue();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+				
 			case "help":
 				event.reply("""
 					rima_bot Commands:
@@ -91,6 +107,7 @@ public class SlashCommandListener extends ListenerAdapter {
 					`/list` - Lists all the available suffixes and wordplays
 					`/new <suffix> <wordplay>` - Adds a new wordplay using a suffix
 					`/remove <suffix>` - Removes an existing wordplay using a suffix
+					`/ignoreme` - Toggles between the bot responding or not responding to you
 					""").setEphemeral(true).queue();
 				break;
 		}
