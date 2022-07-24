@@ -97,6 +97,7 @@ public class SlashCommandListener extends ListenerAdapter {
 					e.printStackTrace();
 					throw new RuntimeException(e);
 				}
+				break;
 				
 			case "help":
 				event.reply("""

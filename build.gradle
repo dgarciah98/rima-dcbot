@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'org.rima_dcbot'
-version '1.0-SNAPSHOT'
+version ''
 
 repositories {
     mavenCentral()
@@ -13,6 +13,20 @@ compileJava.options.encoding = 'UTF-8'
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+}
+
+
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(16))
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    manifest.attributes 'Main-Class': 'org.rima_dcbot.Bot'
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 dependencies {

@@ -29,14 +29,24 @@ public class MessageListener extends ListenerAdapter {
 				Map<String, List<String>> json = loader.loadWordplays();
 				List<BlacklistedUser> blacklist = loader.loadBlacklist();
 				if (!blacklist.contains(new BlacklistedUser(event.getAuthor()))) {
-					String text = msg.getContentStripped().toLowerCase(Locale.ROOT);
-					text = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+					String text = Normalizer.normalize(
+							msg.getContentStripped().toLowerCase(Locale.ROOT),
+							Normalizer.Form.NFD
+						)
+						.replaceAll("\\p{M}", "");
 					String word = text.substring(text.lastIndexOf(" ") + 1);
-					Optional<String> result = json.keySet().stream().filter(key -> {
-						if (msg.getContentStripped().equals(key)) return true;
+					
+					// ignore urls
+					if(text.startsWith("http") || word.startsWith("http")) return;
+					
+					Optional<String> result = json.keySet().stream().filter(key ->
+						/*if (text.equals(key)) return true;
 						else if (word.equals(key)) return true;
-						else return word.endsWith(key);
-					}).findFirst();
+						else if (word.endsWith(key)) return true;
+						else return word.contains(key);*/
+						text.equals(key) || word.equals(key) || word.endsWith(key) // || word.contains(key); // i.e. "cinco?".contains("inco") but may result in incorrect behaviour
+					).findFirst();
+					
 					result.ifPresent(key -> {
 						List<String> res = json.get(key);
 						event.getChannel().sendMessage(res.get(new Random().nextInt(res.size()))).queue();
