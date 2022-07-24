@@ -1,5 +1,9 @@
 package org.rima_dcbot.bean;
 
+import java.util.Objects;
+
+import net.dv8tion.jda.api.entities.User;
+
 public class BlacklistedUser {
 
 	private String username;
@@ -7,7 +11,12 @@ public class BlacklistedUser {
 
 	public BlacklistedUser() {
 	}
-
+	
+	public BlacklistedUser(User user) {
+		this.username = user.getName();
+		this.discriminator = user.getDiscriminator();
+	}
+	
 	public BlacklistedUser(String username, String discriminator) {
 		this.username = username;
 		this.discriminator = discriminator;
@@ -46,6 +55,11 @@ public class BlacklistedUser {
 		}
 		
 		return equalUsername && equalDiscriminator;
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.username, this.discriminator);
 	}
 	
 	@Override
