@@ -30,7 +30,7 @@ public class MessageListener extends ListenerAdapter {
 				List<BlacklistedUser> blacklist = loader.loadBlacklist();
 				if (!blacklist.contains(new BlacklistedUser(event.getAuthor()))) {
 					String text = msg.getContentStripped().toLowerCase(Locale.ROOT);
-					text = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+					text = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("\\p{M}", "").replaceAll("[^a-zA-Z0-9]", "");
 					String word = text.substring(text.lastIndexOf(" ") + 1);
 					Optional<String> result = json.keySet().stream().filter(key -> {
 						if (msg.getContentStripped().equals(key)) return true;
