@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
 
 import org.rima_dcbot.configuration.ConfigurationUtil;
 
@@ -15,18 +16,17 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * JSON file loader
- * 
+ *
  * @author jose
  *
  */
 public class JsonLoader {
-
 	private ObjectMapper om;
 	private ObjectWriter ow;
-
+	
 	private File wordplaysFile;
-	private Map<String, String> wordplays;
-
+	private Map<String, ArrayList<String>> wordplays;
+	
 	public JsonLoader() {
 		om = new ObjectMapper();
 		ow = om.writer(new DefaultPrettyPrinter() {
@@ -39,34 +39,36 @@ public class JsonLoader {
 				return new DefaultPrettyPrinter(this);
 			}
 		});
-
+		
 		wordplaysFile = Paths.get(ConfigurationUtil.getInstance().getProperty("JSON_PATH")).toFile();
 	}
-
-	public Map<String, String> loadWordplays() throws IOException {
-		if (wordplays == null) {
+	
+	public Map<String, ArrayList<String>> loadWordplays() throws IOException {
+		if (wordplays == null)
 			wordplays = om.readValue(wordplaysFile, Map.class);
-		}
 		
 		// return a copy to avoid unwanted modification of wordplays map
 		// no need to deep copy, because key and values are strings
 		return new HashMap<>(wordplays);
 	}
-
+	
 	public void addWordplay(String suffix, String wordplay) throws IOException {
 		// Use loadWordplays instead of direct reference to wordplaysFile
 		// in case this is called before loadWordplays is ever called
-		Map<String, String> wordplays = loadWordplays();
-		wordplays.put(suffix, wordplay);
+		Map<String, ArrayList<String>> wordplays = loadWordplays();
+		wordplays.compute(suffix, (k, v) -> {
+			if(v == null) v = new ArrayList<String>();
+			v.add(wordplay);
+			return v;
+		});
 		ow.writeValue(wordplaysFile, wordplays);
 		this.wordplays = wordplays;
 	}
-
+	
 	public void removeWordplay(String suffix) throws IOException {
-		Map<String, String> wordplays = loadWordplays();
+		Map<String, ArrayList<String>> wordplays = loadWordplays();
 		wordplays.remove(suffix);
 		ow.writeValue(wordplaysFile, wordplays);
 		this.wordplays = wordplays;
 	}
-
 }
