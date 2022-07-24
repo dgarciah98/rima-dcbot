@@ -39,6 +39,7 @@ public class Bot {
         bot.upsertCommand("remove", "Removes an existing wordplay using a suffix")
                 .addOption(OptionType.STRING,"suffix", "Word suffix", true)
                 .queue();
+        bot.upsertCommand("ignoreme", "Toggles between the bot responding or not responding to you");
         bot.awaitReady();
     }
 

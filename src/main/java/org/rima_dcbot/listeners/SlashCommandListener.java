@@ -2,9 +2,12 @@ package org.rima_dcbot.listeners;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
+import org.rima_dcbot.bean.BlacklistedUser;
 import org.rima_dcbot.loader.JsonLoader;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
 public class SlashCommandListener extends ListenerAdapter {
@@ -62,6 +65,23 @@ public class SlashCommandListener extends ListenerAdapter {
                 throw new RuntimeException(e);
             }
         }
+        
+        if (event.getName().equals("ignoreme")) {
+        	try {
+        		List<BlacklistedUser> blacklist = loader.loadBlacklist();
+        		BlacklistedUser author = new BlacklistedUser(event.getUser());
+        		if (blacklist.contains(author)) {
+        			loader.whitelistUser(author);
+        			event.reply("Ya no te estoy ignorando").queue();
+        		} else {
+        			loader.blacklistUser(author);
+        			event.reply("A partir de ahora te ignoro").queue();
+        		}
+        	} catch (IOException e) {
+        		e.printStackTrace();
+        		throw new RuntimeException(e);
+        	}
+        }
 
         if (event.getName().equals("help")) {
             event.reply("""
@@ -71,6 +91,7 @@ public class SlashCommandListener extends ListenerAdapter {
                     `/stop` - Stops the bot from listening to messages
                     `/new <suffix> <wordplay>` - Adds a new wordplay using a suffix
                     `/remove <suffix>` - Removes an existing wordplay using a suffix
+                    `/ignoreme` - Toggles between the bot responding or not responding to you
                     """).queue();
         }
     }
