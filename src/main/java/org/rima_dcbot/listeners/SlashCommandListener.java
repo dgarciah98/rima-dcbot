@@ -1,5 +1,6 @@
 package org.rima_dcbot.listeners;
 
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -7,6 +8,7 @@ import org.rima_dcbot.bean.BlacklistedUser;
 import org.rima_dcbot.loader.JsonLoader;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.List;
 
@@ -27,7 +29,9 @@ public class SlashCommandListener extends ListenerAdapter {
 						if (obj instanceof MessageListener)
 							event.getJDA().removeEventListener(obj);
 					});
-					event.reply("Ya me porto bien").queue();
+					event.reply("Ya me porto bien").queue(ev ->
+						ev.getJDA().getPresence().setActivity(Activity.listening("\uD83D\uDE07"))
+					);
 				}
 				else event.reply("Pero si ahora no he hecho nada!!!!").queue();
 				break;
@@ -35,7 +39,9 @@ public class SlashCommandListener extends ListenerAdapter {
 			case "start":
 				if (!event.getJDA().getRegisteredListeners().stream().anyMatch(obj -> obj instanceof MessageListener)) {
 						event.getJDA().addEventListener(new MessageListener(loader));
-						event.reply("Holaaaa :)").queue();
+						event.reply("Holaaaa :)").queue(ev ->
+							ev.getJDA().getPresence().setActivity(Activity.listening("\uD83D\uDE08"))
+						);
 					}
 				else event.reply("Si ya estoy activao").queue();
 				break;
@@ -46,7 +52,8 @@ public class SlashCommandListener extends ListenerAdapter {
 					loader.loadWordplays().forEach((k, v) -> {
 						list[0] += k + " -> " + v.toString() + "\n";
 					});
-					event.reply(list[0]).setEphemeral(true).queue();
+					event.replyFile(list[0].getBytes(StandardCharsets.UTF_8), "list.txt")
+						.setEphemeral(true).queue();
 				} catch (Exception e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
@@ -56,7 +63,16 @@ public class SlashCommandListener extends ListenerAdapter {
 			case "new":
 				try {
 					String suffix = event.getOption("suffix").getAsString();
-					suffix = Normalizer.normalize(suffix, Normalizer.Form.NFD).replaceAll("\\p{M}","");
+					suffix = Normalizer.normalize(
+						suffix
+							// replace ñ and ç to random chars to bypass them in the normalizer
+							.replace('ñ', '\001')
+							.replace('ç', '\002'),
+						Normalizer.Form.NFD)
+						.replaceAll("\\p{M}","")
+						// replace ñ and ç back
+						.replace('\001', 'ñ')
+						.replace('\002', 'ç');
 					String wordplay = event.getOption("wordplay").getAsString();
 					loader.addWordplay(suffix, wordplay);
 					if (loader.loadWordplays().containsKey(suffix))
@@ -71,7 +87,16 @@ public class SlashCommandListener extends ListenerAdapter {
 			case "remove":
 				try {
 					String suffix = event.getOption("suffix").getAsString();
-					suffix = Normalizer.normalize(suffix, Normalizer.Form.NFD).replaceAll("\\p{M}","");
+					suffix = Normalizer.normalize(
+							suffix
+								// replace ñ and ç to random chars to bypass them in the normalizer
+								.replace('ñ', '\001')
+								.replace('ç', '\002'),
+							Normalizer.Form.NFD)
+						.replaceAll("\\p{M}","")
+						// replace ñ and ç back
+						.replace('\001', 'ñ')
+						.replace('\002', 'ç');
 					loader.removeWordplay(suffix);
 					if (!loader.loadWordplays().containsKey(suffix))
 						event.reply("Rima eliminada").queue();

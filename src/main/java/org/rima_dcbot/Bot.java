@@ -25,7 +25,7 @@ public class Bot {
 			//.addEventListeners(new MessageListener(loader))   // will not listen to messages at first
 			.addEventListeners(new ReadyListener())
 			.addEventListeners(new SlashCommandListener(loader))
-			.setActivity(Activity.listening("Lil B - 05 Fuck Em"))
+			.setActivity(Activity.listening("\uD83D\uDE07"))
 			.build();
 		
 		bot.upsertCommand("help",

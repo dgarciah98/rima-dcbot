@@ -29,28 +29,39 @@ public class MessageListener extends ListenerAdapter {
 				Map<String, List<String>> json = loader.loadWordplays();
 				List<BlacklistedUser> blacklist = loader.loadBlacklist();
 				if (!blacklist.contains(new BlacklistedUser(event.getAuthor()))) {
+					
 					String text = Normalizer.normalize(
-							msg.getContentStripped().toLowerCase(Locale.ROOT),
+							msg.getContentStripped().toLowerCase(Locale.ROOT)
+								// replace ñ and ç to random chars to bypass them in the normalizer
+								.replace('ñ', '\001')
+								.replace('ç', '\002'),
 							Normalizer.Form.NFD
 						)
-						.replaceAll("\\p{M}", "");
+						.replaceAll("\\p{M}","")
+						// replace ñ and ç back
+						.replace('\001', 'ñ')
+						.replace('\002', 'ç');
+
 					String word = text.substring(text.lastIndexOf(" ") + 1);
 					
 					// ignore urls
 					if(text.startsWith("http") || word.startsWith("http")) return;
 					
-					Optional<String> result = json.keySet().stream().filter(key ->
-						/*if (text.equals(key)) return true;
-						else if (word.equals(key)) return true;
-						else if (word.endsWith(key)) return true;
-						else return word.contains(key);*/
-						text.equals(key) || word.equals(key) || word.endsWith(key) // || word.contains(key); // i.e. "cinco?".contains("inco") but may result in incorrect behaviour
-					).findFirst();
-					
-					result.ifPresent(key -> {
+					List<String> results = json.keySet().stream().filter(key ->
+						text.equals(key) || word.equals(key) || word.endsWith(key)
+						// TODO: consider case when 'word.contains(key)' - i.e. "cinco?".contains("inco") but may result in incorrect behaviour
+					).toList();
+
+					if(!results.isEmpty()) {
+						String key = results.stream().findFirst().get();
+						// filter might find words that end with the same suffix, but you want a specific suffix/word
+						if (results.contains(text))
+							key = results.get(results.indexOf(text));
+						else if (results.contains(word))
+							key = results.get(results.indexOf(word));
 						List<String> res = json.get(key);
 						event.getChannel().sendMessage(res.get(new Random().nextInt(res.size()))).queue();
-					});
+					}
 				}
 			} catch (IOException e) {
 				System.out.println("Error reading file: " + e);
