@@ -5,6 +5,7 @@ build/
 !**/src/test/**/build/
 .env
 data/wordplays.json
+data/blacklist.json
 
 ### IntelliJ IDEA ###
 .idea/gradle.xml

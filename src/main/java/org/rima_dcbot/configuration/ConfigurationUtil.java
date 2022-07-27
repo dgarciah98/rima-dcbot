@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class ConfigurationUtil {
-
 	private static ConfigurationUtil instance;
 	private Dotenv dotenv;
 	
@@ -15,12 +14,8 @@ public class ConfigurationUtil {
 		dotenv = Dotenv.load();
 	}
 	
-	public static ConfigurationUtil getInstance() {
-		if (instance == null) {
-			instance = new ConfigurationUtil();
-		}
-		
-		return instance;
+	public static ConfigurationUtil getInstance(){
+		return instance == null ? instance = new ConfigurationUtil() : instance;
 	}
 	
 	public String getProperty(String propertyName) {
