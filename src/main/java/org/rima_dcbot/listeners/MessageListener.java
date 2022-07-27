@@ -38,10 +38,13 @@ public class MessageListener extends ListenerAdapter {
 							Normalizer.Form.NFD
 						)
 						.replaceAll("\\p{M}","")
+						
 						// replace ñ and ç back
 						.replace('\001', 'ñ')
-						.replace('\002', 'ç');
-
+						.replace('\002', 'ç')
+						// filter other marks like parenthesis, dots, exclamation, etc
+						.replaceAll("[^\\p{IsLatin}\\d\\s]", "");
+					
 					String word = text.substring(text.lastIndexOf(" ") + 1);
 					
 					// ignore urls
@@ -49,9 +52,7 @@ public class MessageListener extends ListenerAdapter {
 					
 					List<String> results = json.keySet().stream().filter(key ->
 						text.equals(key) || word.equals(key) || word.endsWith(key)
-						// TODO: consider case when 'word.contains(key)' - i.e. "cinco?".contains("inco") but may result in incorrect behaviour
 					).toList();
-
 					if(!results.isEmpty()) {
 						String key = results.stream().findFirst().get();
 						// filter might find words that end with the same suffix, but you want a specific suffix/word
