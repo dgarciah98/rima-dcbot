@@ -36,6 +36,8 @@ public class JsonLoader {
 	public JsonLoader() {
 		om = new ObjectMapper();
 		ow = om.writer(new DefaultPrettyPrinter() {
+			private static final long serialVersionUID = 5673646862786127544L;
+			
 			@Override
 			public void writeObjectFieldValueSeparator(JsonGenerator jg) throws IOException {
 				jg.writeRaw(": ");
