@@ -4,13 +4,15 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import org.rima_dcbot.bean.BlacklistedUser;
+import org.rima_dcbot.bean.DiscordUser;
+import org.rima_dcbot.configuration.ConfigurationUtil;
 import org.rima_dcbot.loader.JsonLoader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.List;
+import java.util.Map;
 
 public class SlashCommandListener extends ListenerAdapter {
 	private JsonLoader loader;
@@ -109,8 +111,8 @@ public class SlashCommandListener extends ListenerAdapter {
 				
 			case "ignoreme":
 				try {
-					List<BlacklistedUser> blacklist = loader.loadBlacklist();
-					BlacklistedUser author = new BlacklistedUser(event.getUser());
+					List<DiscordUser> blacklist = loader.loadBlacklist();
+					DiscordUser author = new DiscordUser(event.getUser());
 					if (blacklist.contains(author)) {
 						loader.whitelistUser(author);
 						event.reply("Ya no te estoy ignorando").setEphemeral(true).queue();
@@ -123,8 +125,41 @@ public class SlashCommandListener extends ListenerAdapter {
 					throw new RuntimeException(e);
 				}
 				break;
+			
+			case "mychance":
+				try {
+					int percentage = event.getOption("percentage").getAsInt();
+					float weight = (float) percentage / 100.0f;
+					
+					loader.addOrUpdateWeight(new DiscordUser(event.getUser()), weight);
+					event.reply("Te responderé con un " + percentage + "% de probabilidad").setEphemeral(true).queue();
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+				break;
+			
+			case "forgetmychance":
+				try {
+					int defaultPercentage;
+					String defaultWeightString = ConfigurationUtil.getInstance().getProperty("DEFAULT_WEIGHT");
+					if (defaultWeightString != null) {
+						float defaultWeight = Float.parseFloat(defaultWeightString);
+						defaultPercentage = (int) defaultWeight * 100;
+					} else {
+						defaultPercentage = 100;
+					}
+					
+					loader.removeWeight(new DiscordUser(event.getUser()));
+					event.reply("Ya no tienes una probabilidad registrada. "
+							+ "Te responderé con un " + defaultPercentage + "% de probabilidad (valor por defecto)")
+					.setEphemeral(true).queue();
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
 				
-			case "help":
+			case "help": 
 				event.reply("""
 					rima_bot Commands:
 					`/help` - Shows this message
@@ -134,6 +169,8 @@ public class SlashCommandListener extends ListenerAdapter {
 					`/new <suffix> <wordplay>` - Adds a new wordplay using a suffix
 					`/remove <suffix>` - Removes an existing wordplay using a suffix
 					`/ignoreme` - Toggles between the bot responding or not responding to you
+					`/mychance <percentage>` - Add a percentage chance of the bot responding to you (e.g. 10, 50, 75 ...)
+					`/forgetmychance` - Remove your custom chance for getting bot responses
 					""").setEphemeral(true).queue();
 				break;
 		}

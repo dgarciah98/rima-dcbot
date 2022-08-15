@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.rima_dcbot.bean.BlacklistedUser;
+import org.rima_dcbot.bean.DiscordUser;
 import org.rima_dcbot.configuration.ConfigurationUtil;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -31,7 +31,10 @@ public class JsonLoader {
 	private Map<String, List<String>> wordplays;
 
 	private File blacklistFile;
-	private List<BlacklistedUser> blacklist;
+	private List<DiscordUser> blacklist;
+	
+	private File weightsFile;
+	private Map<String, Float> weights;
 	
 	public JsonLoader() {
 		om = new ObjectMapper();
@@ -51,6 +54,7 @@ public class JsonLoader {
 		ConfigurationUtil config = ConfigurationUtil.getInstance();
 		wordplaysFile = Paths.get(config.getProperty("JSON_PATH")).toFile();
 		blacklistFile = Paths.get(config.getProperty("BLACKLIST_PATH")).toFile();
+		weightsFile = Paths.get(config.getProperty("WEIGHTS_PATH")).toFile();
 	}
 	
 	public Map<String, List<String>> loadWordplays() throws IOException {
@@ -82,40 +86,70 @@ public class JsonLoader {
 		this.wordplays = wordplays;
 	}
 
-	public List<BlacklistedUser> loadBlacklist() throws IOException {
+	public List<DiscordUser> loadBlacklist() throws IOException {
 		if (blacklist == null) {
-			blacklist = om.readValue(blacklistFile,  new TypeReference<List<BlacklistedUser>>(){});
+			blacklist = om.readValue(blacklistFile,  new TypeReference<List<DiscordUser>>(){});
 		}
 		
 		return copyBlacklist();
 	}
 	
-	public void blacklistUser(BlacklistedUser user) throws IOException {
+	public void blacklistUser(DiscordUser user) throws IOException {
 		blacklistUser(user.getUsername(), user.getDiscriminator());
 	}
 	
 	public void blacklistUser(String username, String discriminator) throws IOException {
-		List<BlacklistedUser> list = loadBlacklist();
-		list.add(new BlacklistedUser(username, discriminator));
+		List<DiscordUser> list = loadBlacklist();
+		list.add(new DiscordUser(username, discriminator));
 		ow.writeValue(blacklistFile, list);
 		blacklist = list;
 	}
 	
 	public void whitelistUser(String username, String discriminator) throws IOException {
-		whitelistUser(new BlacklistedUser(username, discriminator));
+		whitelistUser(new DiscordUser(username, discriminator));
 	}
 	
-	public void whitelistUser(BlacklistedUser user) throws IOException {
-		List<BlacklistedUser> list = loadBlacklist();
+	public void whitelistUser(DiscordUser user) throws IOException {
+		List<DiscordUser> list = loadBlacklist();
 		list.removeIf(u -> u.equals(user));
 		ow.writeValue(blacklistFile, list);
 		blacklist = list;
 	}
 	
-	private List<BlacklistedUser> copyBlacklist() {
-		List<BlacklistedUser> l = new ArrayList<>();
+	public Map<String, Float> loadWeights() throws IOException {
+		if (weights == null)
+			weights = om.readValue(weightsFile, Map.class);
 		
-		for (BlacklistedUser u : blacklist) {
+		// no need to deep copy, because key and values are strings
+		return new HashMap<>(weights);
+	}
+	
+	public void addOrUpdateWeight(DiscordUser user, float weight) throws IOException {
+		addOrUpdateWeight(user.toString(), weight);
+	}
+	
+	public void addOrUpdateWeight(String user, float weight) throws IOException {
+		Map<String, Float> weights = loadWeights();
+		weights.put(user, weight);
+		ow.writeValue(weightsFile, weights);
+		this.weights = weights;
+	}
+	
+	public void removeWeight(DiscordUser user) throws IOException {
+		removeWeight(user.toString());
+	}
+	
+	public void removeWeight(String user) throws IOException {
+		Map<String, Float> weights = loadWeights();
+		weights.remove(user);
+		ow.writeValue(weightsFile, weights);
+		this.weights = weights;
+	}
+	
+	private List<DiscordUser> copyBlacklist() {
+		List<DiscordUser> l = new ArrayList<>();
+		
+		for (DiscordUser u : blacklist) {
 			l.add(u.copy());
 		}
 		
