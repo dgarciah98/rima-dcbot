@@ -143,7 +143,7 @@ public class SlashCommandListener extends ListenerAdapter {
 					float weight = (float) percentage / 100.0f;
 					
 					loader.addOrUpdateWeight(new DiscordUser(event.getUser()), weight);
-					event.reply("Te responderé con un " + percentage + "% de probabilidad").setEphemeral(true).queue();
+					event.reply("Te responderé el " + percentage + "% de las veces").setEphemeral(true).queue();
 				} catch (IOException e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
@@ -163,7 +163,7 @@ public class SlashCommandListener extends ListenerAdapter {
 					
 					loader.removeWeight(new DiscordUser(event.getUser()));
 					event.reply("Ya no tienes una probabilidad registrada. "
-							+ "Te responderé con un " + defaultPercentage + "% de probabilidad (valor por defecto)")
+							+ "Te responderé el " + defaultPercentage + "% de las veces (valor por defecto)")
 					.setEphemeral(true).queue();
 				} catch (IOException e) {
 					e.printStackTrace();
