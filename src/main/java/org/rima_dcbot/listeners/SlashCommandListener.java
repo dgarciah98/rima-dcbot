@@ -1,28 +1,32 @@
 package org.rima_dcbot.listeners;
 
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.text.Normalizer;
+import java.util.List;
+import java.util.logging.Logger;
 
 import org.rima_dcbot.bean.DiscordUser;
 import org.rima_dcbot.configuration.ConfigurationUtil;
 import org.rima_dcbot.loader.JsonLoader;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.text.Normalizer;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class SlashCommandListener extends ListenerAdapter {
 	private JsonLoader loader;
 	private Logger changelogLogger;
+	private File changelogFile;
 	
 	public SlashCommandListener(JsonLoader loader) {
 		super();
 		this.loader = loader;
-		changelogLogger = ConfigurationUtil.getInstance().getChangelogLogger();
+		ConfigurationUtil config = ConfigurationUtil.getInstance();
+		changelogFile = Paths.get(config.getProperty("CHANGELOG_PATH")).toFile();
+		changelogLogger = config.getChangelogLogger();
 	}
 	
 	@Override
@@ -165,6 +169,9 @@ public class SlashCommandListener extends ListenerAdapter {
 					e.printStackTrace();
 					throw new RuntimeException(e);
 				}
+			
+			case "changelog":
+				event.replyFile(changelogFile).setEphemeral(true).queue();
 				
 			case "help": 
 				event.reply("""
@@ -178,6 +185,7 @@ public class SlashCommandListener extends ListenerAdapter {
 					`/ignoreme` - Toggles between the bot responding or not responding to you
 					`/mychance <percentage>` - Add a percentage chance of the bot responding to you (e.g. 10, 50, 75 ...)
 					`/forgetmychance` - Remove your custom chance for getting bot responses
+					`/changelog` - See the changelog
 					""").setEphemeral(true).queue();
 				break;
 		}

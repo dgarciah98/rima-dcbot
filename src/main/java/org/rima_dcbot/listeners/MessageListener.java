@@ -35,7 +35,9 @@ public class MessageListener extends ListenerAdapter {
 				DiscordUser user = new DiscordUser(event.getAuthor());
 				Map<String, Float> weights = loader.loadWeights();
 				Float weight = weights.get(user.toString());
-				if (weight != null && rand.nextFloat() < weight.floatValue()) return;
+				float roll = rand.nextFloat();
+				if (weight != null && roll < weight.floatValue()) return;
+				else if (roll < defaultWeight) return;
 				
 				Message msg = event.getMessage();
 				Map<String, List<String>> json = loader.loadWordplays();
