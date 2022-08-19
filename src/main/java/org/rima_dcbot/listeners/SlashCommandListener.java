@@ -71,7 +71,6 @@ public class SlashCommandListener extends ListenerAdapter {
 				
 			case "new":
 				try {
-					DiscordUser author = new DiscordUser(event.getUser());
 					String suffix = event.getOption("suffix").getAsString();
 					suffix = Normalizer.normalize(
 						suffix
@@ -87,7 +86,7 @@ public class SlashCommandListener extends ListenerAdapter {
 					loader.addWordplay(suffix, wordplay);
 					if (loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima añadida").queue();
-						changelogLogger.info(author.toString() + " added wordplay \"" + wordplay + "\" for suffix \"" + suffix + "\"");
+						changelogLogger.info(event.getUser().getAsTag() + " added wordplay \"" + wordplay + "\" for suffix \"" + suffix + "\"");
 					} else event.reply("No se ha podido añadir la rima").queue();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -97,7 +96,6 @@ public class SlashCommandListener extends ListenerAdapter {
 				
 			case "remove":
 				try {
-					DiscordUser author = new DiscordUser(event.getUser());
 					String suffix = event.getOption("suffix").getAsString();
 					suffix = Normalizer.normalize(
 							suffix
@@ -112,7 +110,7 @@ public class SlashCommandListener extends ListenerAdapter {
 					loader.removeWordplay(suffix);
 					if (!loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima eliminada").queue();
-						changelogLogger.info(author.toString() + " removed wordplays for suffix \"" + suffix + "\"");
+						changelogLogger.info(event.getUser().getAsTag() + " removed wordplays for suffix \"" + suffix + "\"");
 					} else event.reply("No se ha podido eliminar la rima").queue();
 				} catch (Exception e) {
 					e.printStackTrace();
