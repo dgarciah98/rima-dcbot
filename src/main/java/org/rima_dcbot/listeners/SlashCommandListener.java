@@ -13,13 +13,16 @@ import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class SlashCommandListener extends ListenerAdapter {
 	private JsonLoader loader;
+	private Logger changelogLogger;
 	
 	public SlashCommandListener(JsonLoader loader) {
 		super();
 		this.loader = loader;
+		changelogLogger = ConfigurationUtil.getInstance().getChangelogLogger();
 	}
 	
 	@Override
@@ -64,6 +67,7 @@ public class SlashCommandListener extends ListenerAdapter {
 				
 			case "new":
 				try {
+					DiscordUser author = new DiscordUser(event.getUser());
 					String suffix = event.getOption("suffix").getAsString();
 					suffix = Normalizer.normalize(
 						suffix
@@ -77,9 +81,10 @@ public class SlashCommandListener extends ListenerAdapter {
 						.replace('\002', 'ç');
 					String wordplay = event.getOption("wordplay").getAsString();
 					loader.addWordplay(suffix, wordplay);
-					if (loader.loadWordplays().containsKey(suffix))
+					if (loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima añadida").queue();
-					else event.reply("No se ha podido añadir la rima").queue();
+						changelogLogger.info(author.toString() + " added wordplay \"" + wordplay + "\" for suffix \"" + suffix + "\"");
+					} else event.reply("No se ha podido añadir la rima").queue();
 				} catch (Exception e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
@@ -88,6 +93,7 @@ public class SlashCommandListener extends ListenerAdapter {
 				
 			case "remove":
 				try {
+					DiscordUser author = new DiscordUser(event.getUser());
 					String suffix = event.getOption("suffix").getAsString();
 					suffix = Normalizer.normalize(
 							suffix
@@ -100,9 +106,10 @@ public class SlashCommandListener extends ListenerAdapter {
 						.replace('\001', 'ñ')
 						.replace('\002', 'ç');
 					loader.removeWordplay(suffix);
-					if (!loader.loadWordplays().containsKey(suffix))
+					if (!loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima eliminada").queue();
-					else event.reply("No se ha podido eliminar la rima").queue();
+						changelogLogger.info(author.toString() + " removed wordplays for suffix \"" + suffix + "\"");
+					} else event.reply("No se ha podido eliminar la rima").queue();
 				} catch (Exception e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
