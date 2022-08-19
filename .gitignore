@@ -7,6 +7,7 @@ build/
 data/wordplays.json
 data/blacklist.json
 data/weights.json
+changelog.txt
 
 ### IntelliJ IDEA ###
 .idea/gradle.xml
