@@ -1,23 +1,32 @@
 package org.rima_dcbot.listeners;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.text.Normalizer;
+import java.util.List;
+import java.util.logging.Logger;
+
+import org.rima_dcbot.bean.DiscordUser;
+import org.rima_dcbot.configuration.ConfigurationUtil;
+import org.rima_dcbot.loader.JsonLoader;
+
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import org.rima_dcbot.bean.BlacklistedUser;
-import org.rima_dcbot.loader.JsonLoader;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.text.Normalizer;
-import java.util.List;
-
 public class SlashCommandListener extends ListenerAdapter {
 	private JsonLoader loader;
+	private Logger changelogLogger;
+	private File changelogFile;
 	
 	public SlashCommandListener(JsonLoader loader) {
 		super();
 		this.loader = loader;
+		ConfigurationUtil config = ConfigurationUtil.getInstance();
+		changelogFile = Paths.get(config.getProperty("CHANGELOG_PATH")).toFile();
+		changelogLogger = config.getChangelogLogger();
 	}
 	
 	@Override
@@ -75,9 +84,10 @@ public class SlashCommandListener extends ListenerAdapter {
 						.replace('\002', 'ç');
 					String wordplay = event.getOption("wordplay").getAsString();
 					loader.addWordplay(suffix, wordplay);
-					if (loader.loadWordplays().containsKey(suffix))
+					if (loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima añadida").queue();
-					else event.reply("No se ha podido añadir la rima").queue();
+						changelogLogger.info(event.getUser().getAsTag() + " added wordplay \"" + wordplay + "\" for suffix \"" + suffix + "\"");
+					} else event.reply("No se ha podido añadir la rima").queue();
 				} catch (Exception e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
@@ -98,9 +108,10 @@ public class SlashCommandListener extends ListenerAdapter {
 						.replace('\001', 'ñ')
 						.replace('\002', 'ç');
 					loader.removeWordplay(suffix);
-					if (!loader.loadWordplays().containsKey(suffix))
+					if (!loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima eliminada").queue();
-					else event.reply("No se ha podido eliminar la rima").queue();
+						changelogLogger.info(event.getUser().getAsTag() + " removed wordplays for suffix \"" + suffix + "\"");
+					} else event.reply("No se ha podido eliminar la rima").queue();
 				} catch (Exception e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
@@ -109,8 +120,8 @@ public class SlashCommandListener extends ListenerAdapter {
 				
 			case "ignoreme":
 				try {
-					List<BlacklistedUser> blacklist = loader.loadBlacklist();
-					BlacklistedUser author = new BlacklistedUser(event.getUser());
+					List<DiscordUser> blacklist = loader.loadBlacklist();
+					DiscordUser author = new DiscordUser(event.getUser());
 					if (blacklist.contains(author)) {
 						loader.whitelistUser(author);
 						event.reply("Ya no te estoy ignorando").setEphemeral(true).queue();
@@ -123,8 +134,44 @@ public class SlashCommandListener extends ListenerAdapter {
 					throw new RuntimeException(e);
 				}
 				break;
+			
+			case "mychance":
+				try {
+					int percentage = event.getOption("percentage").getAsInt();
+					float weight = (float) percentage / 100.0f;
+					
+					loader.addOrUpdateWeight(new DiscordUser(event.getUser()), weight);
+					event.reply("Te responderé el " + percentage + "% de las veces").setEphemeral(true).queue();
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+				break;
+			
+			case "forgetmychance":
+				try {
+					int defaultPercentage;
+					String defaultWeightString = ConfigurationUtil.getInstance().getProperty("DEFAULT_WEIGHT");
+					if (defaultWeightString != null) {
+						float defaultWeight = Float.parseFloat(defaultWeightString);
+						defaultPercentage = (int) defaultWeight * 100;
+					} else {
+						defaultPercentage = 100;
+					}
+					
+					loader.removeWeight(new DiscordUser(event.getUser()));
+					event.reply("Ya no tienes una probabilidad registrada. "
+							+ "Te responderé el " + defaultPercentage + "% de las veces (valor por defecto)")
+					.setEphemeral(true).queue();
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+			
+			case "changelog":
+				event.replyFile(changelogFile).setEphemeral(true).queue();
 				
-			case "help":
+			case "help": 
 				event.reply("""
 					rima_bot Commands:
 					`/help` - Shows this message
@@ -134,6 +181,9 @@ public class SlashCommandListener extends ListenerAdapter {
 					`/new <suffix> <wordplay>` - Adds a new wordplay using a suffix
 					`/remove <suffix>` - Removes an existing wordplay using a suffix
 					`/ignoreme` - Toggles between the bot responding or not responding to you
+					`/mychance <percentage>` - Add a percentage chance of the bot responding to you (e.g. 10, 50, 75 ...)
+					`/forgetmychance` - Remove your custom chance for getting bot responses
+					`/changelog` - See the changelog
 					""").setEphemeral(true).queue();
 				break;
 		}

@@ -4,20 +4,20 @@ import java.util.Objects;
 
 import net.dv8tion.jda.api.entities.User;
 
-public class BlacklistedUser {
+public class DiscordUser {
 
 	private String username;
 	private String discriminator;
 
-	public BlacklistedUser() {
+	public DiscordUser() {
 	}
 	
-	public BlacklistedUser(User user) {
+	public DiscordUser(User user) {
 		this.username = user.getName();
 		this.discriminator = user.getDiscriminator();
 	}
 	
-	public BlacklistedUser(String username, String discriminator) {
+	public DiscordUser(String username, String discriminator) {
 		this.username = username;
 		this.discriminator = discriminator;
 	}
@@ -30,19 +30,19 @@ public class BlacklistedUser {
 		return this.discriminator;
 	}
 	
-	public BlacklistedUser copy() {
-		return new BlacklistedUser(this.username, this.discriminator);
+	public DiscordUser copy() {
+		return new DiscordUser(this.username, this.discriminator);
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof BlacklistedUser) {
-			return equals((BlacklistedUser) obj);
+		if (obj instanceof DiscordUser) {
+			return equals((DiscordUser) obj);
 		}
 		return false;
 	}
 	
-	private boolean equals(BlacklistedUser u) {
+	private boolean equals(DiscordUser u) {
 		
 		boolean equalUsername = false;
 		if (u.getUsername() != null) {

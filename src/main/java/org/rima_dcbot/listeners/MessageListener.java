@@ -6,7 +6,8 @@ import java.util.*;
 
 import javax.annotation.Nonnull;
 
-import org.rima_dcbot.bean.BlacklistedUser;
+import org.rima_dcbot.bean.DiscordUser;
+import org.rima_dcbot.configuration.ConfigurationUtil;
 import org.rima_dcbot.loader.JsonLoader;
 
 import net.dv8tion.jda.api.entities.Message;
@@ -15,20 +16,33 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class MessageListener extends ListenerAdapter {
 	private JsonLoader loader;
+	private Random rand;
+	private float defaultWeight = 1.0f;
 	
 	public MessageListener(JsonLoader loader) {
 		super();
 		this.loader = loader;
+		rand = new Random();
+		
+		String defaultWeightString = ConfigurationUtil.getInstance().getProperty("DEFAULT_WEIGHT");
+		if (defaultWeightString != null) defaultWeight = Float.parseFloat(defaultWeightString);
 	}
 	
 	@Override
 	public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
 		if(!event.getAuthor().isBot()) {
 			try {
+				DiscordUser user = new DiscordUser(event.getAuthor());
+				Map<String, Float> weights = loader.loadWeights();
+				Float weight = weights.get(user.toString());
+				float roll = rand.nextFloat();
+				if (weight != null && roll < weight.floatValue()) return;
+				else if (roll < defaultWeight) return;
+				
 				Message msg = event.getMessage();
 				Map<String, List<String>> json = loader.loadWordplays();
-				List<BlacklistedUser> blacklist = loader.loadBlacklist();
-				if (!blacklist.contains(new BlacklistedUser(event.getAuthor()))) {
+				List<DiscordUser> blacklist = loader.loadBlacklist();
+				if (!blacklist.contains(user)) {
 					
 					String text = Normalizer.normalize(
 							msg.getContentStripped().toLowerCase(Locale.ROOT)
