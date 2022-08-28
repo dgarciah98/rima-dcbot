@@ -36,8 +36,10 @@ public class MessageListener extends ListenerAdapter {
 				Map<String, Float> weights = loader.loadWeights();
 				Float weight = weights.get(user.toString());
 				float roll = rand.nextFloat();
-				if (weight != null && roll < weight.floatValue()) return;
-				else if (roll < defaultWeight) return;
+				if (weight != null) {
+					if (roll > weight.floatValue()) return;
+				}
+				else if (roll > defaultWeight) return;
 				
 				Message msg = event.getMessage();
 				Map<String, List<String>> json = loader.loadWordplays();
