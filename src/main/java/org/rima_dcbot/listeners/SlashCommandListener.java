@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 public class SlashCommandListener extends ListenerAdapter {
 	private JsonLoader loader;
 	private Logger changelogLogger;
+	private Logger log;
 	private File changelogFile;
 	
 	public SlashCommandListener(JsonLoader loader) {
@@ -27,6 +28,7 @@ public class SlashCommandListener extends ListenerAdapter {
 		ConfigurationUtil config = ConfigurationUtil.getInstance();
 		changelogFile = Paths.get(config.getProperty("CHANGELOG_PATH")).toFile();
 		changelogLogger = config.getChangelogLogger();
+		log = config.getStandardLogger();
 	}
 	
 	@Override
@@ -86,7 +88,9 @@ public class SlashCommandListener extends ListenerAdapter {
 					loader.addWordplay(suffix, wordplay);
 					if (loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima añadida").queue();
-						changelogLogger.info(event.getUser().getAsTag() + " added wordplay \"" + wordplay + "\" for suffix \"" + suffix + "\"");
+						String record = event.getUser().getAsTag() + " added wordplay \"" + wordplay + "\" for suffix \"" + suffix + "\"";
+						changelogLogger.info(record);
+						log.info(record);
 					} else event.reply("No se ha podido añadir la rima").queue();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -110,7 +114,9 @@ public class SlashCommandListener extends ListenerAdapter {
 					loader.removeWordplay(suffix);
 					if (!loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima eliminada").queue();
-						changelogLogger.info(event.getUser().getAsTag() + " removed wordplays for suffix \"" + suffix + "\"");
+						String record = event.getUser().getAsTag() + " removed wordplays for suffix \"" + suffix + "\"";
+						changelogLogger.info(record);
+						log.info(record);
 					} else event.reply("No se ha podido eliminar la rima").queue();
 				} catch (Exception e) {
 					e.printStackTrace();

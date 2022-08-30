@@ -31,44 +31,44 @@ public class MessageListener extends ListenerAdapter {
 	@Override
 	public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
 		if(!event.getAuthor().isBot()) {
+			DiscordUser user = new DiscordUser(event.getAuthor());
 			try {
-				DiscordUser user = new DiscordUser(event.getAuthor());
-				Map<String, Float> weights = loader.loadWeights();
-				Float weight = weights.get(user.toString());
-				float roll = rand.nextFloat();
-				if (weight != null) {
-					if (roll > weight.floatValue()) return;
-				}
-				else if (roll > defaultWeight) return;
-				
-				Message msg = event.getMessage();
-				Map<String, List<String>> json = loader.loadWordplays();
 				List<DiscordUser> blacklist = loader.loadBlacklist();
 				if (!blacklist.contains(user)) {
-					
+					Map<String, Float> weights = loader.loadWeights();
+					Float weight = weights.get(user.toString());
+					float roll = rand.nextFloat();
+					if (weight != null) {
+						if (roll > weight.floatValue()) return;
+					}
+					else if (roll > defaultWeight) return;
+
+					Message msg = event.getMessage();
+					Map<String, List<String>> json = loader.loadWordplays();
+
 					String text = Normalizer.normalize(
 							msg.getContentStripped().toLowerCase(Locale.ROOT)
-								// replace ñ and ç to random chars to bypass them in the normalizer
-								.replace('ñ', '\001')
-								.replace('ç', '\002'),
+							// replace ñ and ç to random chars to bypass them in the normalizer
+							.replace('ñ', '\001')
+							.replace('ç', '\002'),
 							Normalizer.Form.NFD
-						)
-						.replaceAll("\\p{M}","")
-						
-						// replace ñ and ç back
-						.replace('\001', 'ñ')
-						.replace('\002', 'ç')
-						// filter other marks like parenthesis, dots, exclamation, etc
-						.replaceAll("[^\\p{IsLatin}\\d\\s]", "");
-					
+							)
+							.replaceAll("\\p{M}","")
+
+							// replace ñ and ç back
+							.replace('\001', 'ñ')
+							.replace('\002', 'ç')
+							// filter other marks like parenthesis, dots, exclamation, etc
+							.replaceAll("[^\\p{IsLatin}\\d\\s]", "");
+
 					String word = text.substring(text.lastIndexOf(" ") + 1);
-					
+
 					// ignore urls
 					if(text.startsWith("http") || word.startsWith("http")) return;
-					
+
 					List<String> results = json.keySet().stream().filter(key ->
-						text.equals(key) || word.equals(key) || word.endsWith(key)
-					).toList();
+					text.equals(key) || word.equals(key) || word.endsWith(key)
+							).toList();
 					if(!results.isEmpty()) {
 						String key = results.stream().findFirst().get();
 						// filter might find words that end with the same suffix, but you want a specific suffix/word
