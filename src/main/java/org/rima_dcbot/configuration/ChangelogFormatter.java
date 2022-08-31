@@ -13,8 +13,8 @@ public class ChangelogFormatter extends Formatter {
 	public String format(LogRecord record) {
 		StringBuilder sb = new StringBuilder();
 		
-		
-        sb.append(LocalDateTime.ofInstant(Instant.ofEpochMilli(record.getMillis()), ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
+        sb.append(LocalDateTime.ofInstant(Instant.ofEpochMilli(record.getMillis()), 
+        		ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
 		sb.append(": ");
 		sb.append(record.getMessage());
 		sb.append("\n");

@@ -1,6 +1,7 @@
 package org.rima_dcbot.configuration;
 
 import java.io.IOException;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
@@ -10,6 +11,7 @@ public class ConfigurationUtil {
 	private static ConfigurationUtil instance;
 	private Dotenv dotenv;
 	private Logger changelogLogger;
+	private Logger standardLogger;
 	private FileHandler changelogFileHandler;
 
 	private ConfigurationUtil() {
@@ -46,5 +48,17 @@ public class ConfigurationUtil {
 		}
 		
 		return changelogLogger;
+	}
+	
+	public Logger getStandardLogger() {
+		if (standardLogger == null) {
+			standardLogger = Logger.getLogger("standard-logger");
+			ConsoleHandler handler = new ConsoleHandler();
+			handler.setFormatter(new StandardLoggerFormatter());
+			standardLogger.addHandler(handler);
+			standardLogger.setUseParentHandlers(false);
+		}
+		
+		return standardLogger;
 	}
 }
