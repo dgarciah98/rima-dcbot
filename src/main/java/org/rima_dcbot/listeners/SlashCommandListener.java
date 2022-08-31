@@ -173,9 +173,11 @@ public class SlashCommandListener extends ListenerAdapter {
 					e.printStackTrace();
 					throw new RuntimeException(e);
 				}
+				break;
 			
 			case "changelog":
 				event.replyFile(changelogFile).setEphemeral(true).queue();
+				break;
 				
 			case "help": 
 				event.reply("""
