@@ -42,11 +42,9 @@ public class MessageListener extends ListenerAdapter {
 				if (userOptions.isPresent() && !userOptions.get().getIsIgnored()) {
 					double weight = userOptions.get().getChanceWeight();
 					if (weight != 1.0 && roll > weight) return;
-					//else if (roll > defaultWeight) return;
 				}
-				else if (userOptions.isPresent() && !userOptions.get().getIsIgnored()) return;
-				
-				if (roll > defaultWeight) return;
+				else if (userOptions.isPresent() && userOptions.get().getIsIgnored()) return;
+				else if (roll > defaultWeight) return;
 				
 				Message msg = event.getMessage();
 				Map<String, List<String>> json = loader.loadWordplays();

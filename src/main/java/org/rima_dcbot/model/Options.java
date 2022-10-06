@@ -18,7 +18,6 @@ public class Options {
     this.isIgnored = false;
     this.chanceWeight = chanceWeight;
     this.timeout = 0;
-
   }
 
   @Id

@@ -48,10 +48,16 @@ public class Bot implements CommandLineRunner {
       .addEventListeners(new SlashCommandListener(loader, optionRepo))
       .setActivity(Activity.listening("\uD83D\uDE07"))
       .build();
-
+    
+    upsertBotCommands(bot);
+    
+    bot.awaitReady();
+  }
+  
+  static void upsertBotCommands(JDA bot) {
     OptionData percentage = new OptionData(OptionType.INTEGER, "percentage", "Percentage as a number, without symbol, between 0-100", true);
     percentage.setRequiredRange(0L, 100L);
-
+  
     bot.upsertCommand("help",
       "Shows info about this bot's slash commands").queue();
     bot.upsertCommand("start",
@@ -81,6 +87,5 @@ public class Bot implements CommandLineRunner {
     bot.upsertCommand("changelog",
         "See the changelog")
       .queue();
-    bot.awaitReady();
   }
 }
