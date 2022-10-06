@@ -5,26 +5,33 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.text.Normalizer;
-import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import org.rima_dcbot.bean.DiscordUser;
 import org.rima_dcbot.configuration.ConfigurationUtil;
+import org.rima_dcbot.crud.OptionsRepository;
 import org.rima_dcbot.loader.JsonLoader;
 
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.rima_dcbot.model.Options;
+import org.rima_dcbot.utils.Utils;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SlashCommandListener extends ListenerAdapter {
+	private OptionsRepository optionsRepo;
 	private JsonLoader loader;
 	private Logger changelogLogger;
 	private Logger log;
 	private File changelogFile;
 	
-	public SlashCommandListener(JsonLoader loader) {
+	public SlashCommandListener(JsonLoader loader, OptionsRepository optionsRepo) {
 		super();
 		this.loader = loader;
+		this.optionsRepo = optionsRepo;
 		ConfigurationUtil config = ConfigurationUtil.getInstance();
 		changelogFile = Paths.get(config.getProperty("CHANGELOG_PATH")).toFile();
 		changelogLogger = config.getChangelogLogger();
@@ -49,7 +56,7 @@ public class SlashCommandListener extends ListenerAdapter {
 		
 			case "start":
 				if (!event.getJDA().getRegisteredListeners().stream().anyMatch(obj -> obj instanceof MessageListener)) {
-						event.getJDA().addEventListener(new MessageListener(loader));
+						event.getJDA().addEventListener(new MessageListener(this.loader, this.optionsRepo));
 						event.reply("Holaaaa :)").queue(ev ->
 							ev.getJDA().getPresence().setActivity(Activity.listening("\uD83D\uDE08"))
 						);
@@ -74,16 +81,7 @@ public class SlashCommandListener extends ListenerAdapter {
 			case "new":
 				try {
 					String suffix = event.getOption("suffix").getAsString();
-					suffix = Normalizer.normalize(
-						suffix
-							// replace ñ and ç to random chars to bypass them in the normalizer
-							.replace('ñ', '\001')
-							.replace('ç', '\002'),
-						Normalizer.Form.NFD)
-						.replaceAll("\\p{M}","")
-						// replace ñ and ç back
-						.replace('\001', 'ñ')
-						.replace('\002', 'ç');
+					suffix = Utils.normalizeText(suffix);
 					String wordplay = event.getOption("wordplay").getAsString();
 					loader.addWordplay(suffix, wordplay);
 					if (loader.loadWordplays().containsKey(suffix)) {
@@ -101,16 +99,7 @@ public class SlashCommandListener extends ListenerAdapter {
 			case "remove":
 				try {
 					String suffix = event.getOption("suffix").getAsString();
-					suffix = Normalizer.normalize(
-							suffix
-								// replace ñ and ç to random chars to bypass them in the normalizer
-								.replace('ñ', '\001')
-								.replace('ç', '\002'),
-							Normalizer.Form.NFD)
-						.replaceAll("\\p{M}","")
-						// replace ñ and ç back
-						.replace('\001', 'ñ')
-						.replace('\002', 'ç');
+					suffix = Utils.normalizeText(suffix);
 					loader.removeWordplay(suffix);
 					if (!loader.loadWordplays().containsKey(suffix)) {
 						event.reply("Rima eliminada").queue();
@@ -126,16 +115,27 @@ public class SlashCommandListener extends ListenerAdapter {
 				
 			case "ignoreme":
 				try {
-					List<DiscordUser> blacklist = loader.loadBlacklist();
-					DiscordUser author = new DiscordUser(event.getUser());
-					if (blacklist.contains(author)) {
-						loader.whitelistUser(author);
+					Optional<Options> userOptions = optionsRepo.findById(event.getUser().getId());
+					if(userOptions.isEmpty()) {
+						Options newOptions = new Options(
+							event.getUser().getId(),
+							event.getUser().getName(),
+							event.getUser().getDiscriminator(),
+							Utils.getDefaultWeight()
+						);
+						optionsRepo.save(newOptions);
+						userOptions = Optional.of(newOptions);
+					}
+					if(userOptions.get().getIsIgnored()) {
+						userOptions.get().setIsIgnored(false);
+						optionsRepo.save(userOptions.get());
 						event.reply("Ya no te estoy ignorando").setEphemeral(true).queue();
 					} else {
-						loader.blacklistUser(author);
+						userOptions.get().setIsIgnored(true);
+						optionsRepo.save(userOptions.get());
 						event.reply("A partir de ahora te ignoro").setEphemeral(true).queue();
 					}
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
 				}
@@ -143,12 +143,24 @@ public class SlashCommandListener extends ListenerAdapter {
 			
 			case "mychance":
 				try {
+					Optional<Options> userOptions = optionsRepo.findById(event.getUser().getId());
+					if(userOptions.isEmpty()) {
+						Options newOptions = new Options(
+							event.getUser().getId(),
+							event.getUser().getName(),
+							event.getUser().getDiscriminator(),
+							Utils.getDefaultWeight()
+						);
+						optionsRepo.save(newOptions);
+						userOptions = Optional.of(newOptions);
+					}
 					int percentage = event.getOption("percentage").getAsInt();
-					float weight = (float) percentage / 100.0f;
+					double weight = percentage / 100.0f;
 					
-					loader.addOrUpdateWeight(new DiscordUser(event.getUser()), weight);
+					userOptions.get().setChanceWeight(weight);
+					optionsRepo.save(userOptions.get());
 					event.reply("Te responderé el " + percentage + "% de las veces").setEphemeral(true).queue();
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
 				}
@@ -156,20 +168,25 @@ public class SlashCommandListener extends ListenerAdapter {
 			
 			case "forgetmychance":
 				try {
-					int defaultPercentage;
-					String defaultWeightString = ConfigurationUtil.getInstance().getProperty("DEFAULT_WEIGHT");
-					if (defaultWeightString != null) {
-						float defaultWeight = Float.parseFloat(defaultWeightString);
-						defaultPercentage = (int) defaultWeight * 100;
-					} else {
-						defaultPercentage = 100;
-					}
+					int defaultPercentage = (int) Utils.getDefaultWeight()* 100;
 					
-					loader.removeWeight(new DiscordUser(event.getUser()));
+					Optional<Options> userOptions = optionsRepo.findById(event.getUser().getId());
+					if(userOptions.isEmpty()) {
+						Options newOptions = new Options(
+							event.getUser().getId(),
+							event.getUser().getName(),
+							event.getUser().getDiscriminator(),
+							defaultPercentage/100.0
+						);
+						optionsRepo.save(newOptions);
+						userOptions = Optional.of(newOptions);
+					}
+					else userOptions.get().setChanceWeight(defaultPercentage/100.0);
+					optionsRepo.save(userOptions.get());
 					event.reply("Ya no tienes una probabilidad registrada. "
 							+ "Te responderé el " + defaultPercentage + "% de las veces (valor por defecto)")
 					.setEphemeral(true).queue();
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
 				}

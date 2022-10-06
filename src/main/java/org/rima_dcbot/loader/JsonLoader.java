@@ -16,6 +16,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
 
 /**
  * JSON file loader
@@ -23,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
  * @author jose
  *
  */
+@Service
 public class JsonLoader {
 	private ObjectMapper om;
 	private ObjectWriter ow;
@@ -35,7 +38,7 @@ public class JsonLoader {
 	
 	private File weightsFile;
 	private Map<String, Float> weights;
-	
+
 	public JsonLoader() {
 		om = new ObjectMapper();
 		ow = om.writer(new DefaultPrettyPrinter() {

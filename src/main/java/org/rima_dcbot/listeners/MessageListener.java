@@ -8,79 +8,70 @@ import javax.annotation.Nonnull;
 
 import org.rima_dcbot.bean.DiscordUser;
 import org.rima_dcbot.configuration.ConfigurationUtil;
+import org.rima_dcbot.crud.OptionsRepository;
 import org.rima_dcbot.loader.JsonLoader;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.rima_dcbot.model.Options;
+import org.rima_dcbot.utils.Utils;
+import org.springframework.stereotype.Component;
 
+@Component
 public class MessageListener extends ListenerAdapter {
+	private OptionsRepository optionsRepo;
 	private JsonLoader loader;
 	private Random rand;
-	private float defaultWeight = 1.0f;
-	
-	public MessageListener(JsonLoader loader) {
+	private double defaultWeight;
+
+	public MessageListener(JsonLoader loader, OptionsRepository optionsRepo) {
 		super();
 		this.loader = loader;
+		this.optionsRepo = optionsRepo;
 		rand = new Random();
-		
-		String defaultWeightString = ConfigurationUtil.getInstance().getProperty("DEFAULT_WEIGHT");
-		if (defaultWeightString != null) defaultWeight = Float.parseFloat(defaultWeightString);
+		defaultWeight = Utils.getDefaultWeight();
 	}
 	
 	@Override
 	public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
 		if(!event.getAuthor().isBot()) {
-			DiscordUser user = new DiscordUser(event.getAuthor());
 			try {
-				List<DiscordUser> blacklist = loader.loadBlacklist();
-				if (!blacklist.contains(user)) {
-					Map<String, Float> weights = loader.loadWeights();
-					Float weight = weights.get(user.toString());
-					float roll = rand.nextFloat();
-					if (weight != null) {
-						if (roll > weight.floatValue()) return;
-					}
-					else if (roll > defaultWeight) return;
-
-					Message msg = event.getMessage();
-					Map<String, List<String>> json = loader.loadWordplays();
-
-					String text = Normalizer.normalize(
-							msg.getContentStripped().toLowerCase(Locale.ROOT)
-							// replace ñ and ç to random chars to bypass them in the normalizer
-							.replace('ñ', '\001')
-							.replace('ç', '\002'),
-							Normalizer.Form.NFD
-							)
-							.replaceAll("\\p{M}","")
-
-							// replace ñ and ç back
-							.replace('\001', 'ñ')
-							.replace('\002', 'ç')
-							// filter other marks like parenthesis, dots, exclamation, etc
-							.replaceAll("[^\\p{IsLatin}\\d\\s]", "");
-
-					String word = text.substring(text.lastIndexOf(" ") + 1);
-
-					// ignore urls
-					if(text.startsWith("http") || word.startsWith("http")) return;
-
-					List<String> results = json.keySet().stream().filter(key ->
-					text.equals(key) || word.equals(key) || word.endsWith(key)
-							).toList();
-					if(!results.isEmpty()) {
-						String key = results.stream().findFirst().get();
-						// filter might find words that end with the same suffix, but you want a specific suffix/word
-						if (results.contains(text))
-							key = results.get(results.indexOf(text));
-						else if (results.contains(word))
-							key = results.get(results.indexOf(word));
-						List<String> res = json.get(key);
-						event.getChannel().sendMessage(res.get(new Random().nextInt(res.size()))).queue();
-					}
+				Optional<Options> userOptions = optionsRepo.findById(event.getAuthor().getId());
+				double roll = rand.nextDouble();
+				if (userOptions.isPresent() && !userOptions.get().getIsIgnored()) {
+					double weight = userOptions.get().getChanceWeight();
+					if (weight != 1.0 && roll > weight) return;
+					//else if (roll > defaultWeight) return;
 				}
-			} catch (IOException e) {
+				else if (userOptions.isPresent() && !userOptions.get().getIsIgnored()) return;
+				
+				if (roll > defaultWeight) return;
+				
+				Message msg = event.getMessage();
+				Map<String, List<String>> json = loader.loadWordplays();
+
+				String text = Utils.normalizeText(msg.getContentStripped().toLowerCase(Locale.ROOT));
+
+				String word = text.substring(text.lastIndexOf(" ") + 1);
+
+				// ignore urls
+				if(text.startsWith("http") || word.startsWith("http")) return;
+
+				List<String> results = json.keySet().stream().filter(key ->
+				text.equals(key) || word.equals(key) || word.endsWith(key)
+						).toList();
+				if(!results.isEmpty()) {
+					String key = results.stream().findFirst().get();
+					// filter might find words that end with the same suffix, but you want a specific suffix/word
+					if (results.contains(text))
+						key = results.get(results.indexOf(text));
+					else if (results.contains(word))
+						key = results.get(results.indexOf(word));
+					List<String> res = json.get(key);
+					event.getChannel().sendMessage(res.get(new Random().nextInt(res.size()))).queue();
+				}
+			} catch (Exception e) {
 				System.out.println("Error reading file: " + e);
 				throw new RuntimeException(e);
 			}

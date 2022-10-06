@@ -11,11 +11,13 @@ changelog.txt
 
 ### IntelliJ IDEA ###
 .idea/gradle.xml
+.idea/uiDesigner.xml
 .idea/workspace.xml
 .idea/modules.xml
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.idea/codeStyles/
 *.iws
 *.iml
 *.ipr

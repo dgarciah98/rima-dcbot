@@ -1,48 +1,58 @@
 plugins {
-    id 'java'
+  id 'org.springframework.boot' version '2.7.4'
+  id 'io.spring.dependency-management' version '1.0.14.RELEASE'
+  id 'java'
 }
 
 group 'org.rima_dcbot'
 version ''
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 compileJava.options.encoding = 'UTF-8'
 
 tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
+  options.encoding = 'UTF-8'
 }
 
-
-
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(16))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(16))
 }
 
 jar {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    manifest.attributes 'Main-Class': 'org.rima_dcbot.Bot'
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  manifest.attributes 'Main-Class': 'org.rima_dcbot.Bot'
+  from {
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
+
+configurations {
+  compileOnly {
+    extendsFrom annotationProcessor
+  }
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-alpha.17") {
-        exclude module: 'opus-java'
-    }
-    implementation 'io.github.cdimascio:dotenv-java:2.2.4'
+  implementation("net.dv8tion:JDA:5.0.0-alpha.17") {
+    exclude module: 'opus-java'
+  }
+  implementation 'io.github.cdimascio:dotenv-java:2.2.4'
 
-    implementation 'org.slf4j:slf4j-api:1.7.36'
-    implementation 'org.slf4j:slf4j-simple:1.7.36'
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
-	
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+  //implementation 'org.slf4j:slf4j-api:1.7.36'
+  //implementation 'org.slf4j:slf4j-simple:1.7.36'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+  implementation 'org.xerial:sqlite-jdbc:3.39.3.0'
+
+  compileOnly 'org.projectlombok:lombok'
+  annotationProcessor 'org.projectlombok:lombok'
+
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 test {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }
