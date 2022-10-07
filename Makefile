@@ -3,7 +3,7 @@ default: all
 all: app docker-build docker-remove docker-run
 
 app:
-	./gradlew jar
+	./gradlew bootJar
 
 docker-remove:
 	docker stop rima-bot

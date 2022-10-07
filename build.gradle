@@ -21,14 +21,6 @@ java {
   toolchain.languageVersion.set(JavaLanguageVersion.of(16))
 }
 
-jar {
-  duplicatesStrategy = DuplicatesStrategy.INCLUDE
-  manifest.attributes 'Main-Class': 'org.rima_dcbot.Bot'
-  from {
-    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-  }
-}
-
 configurations {
   compileOnly {
     extendsFrom annotationProcessor
@@ -41,8 +33,6 @@ dependencies {
   }
   implementation 'io.github.cdimascio:dotenv-java:2.2.4'
 
-  //implementation 'org.slf4j:slf4j-api:1.7.36'
-  //implementation 'org.slf4j:slf4j-simple:1.7.36'
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
   implementation 'org.xerial:sqlite-jdbc:3.39.3.0'
 
