@@ -1,7 +1,7 @@
 #!/bin/sh
 
 sqlite3 ./options.db << EOF
-  CREATE TABLE options(
+  CREATE TABLE IF NOT EXISTS options(
     discord_id character(18) not null,
     user text not null,
     discriminator character(4) not null,
