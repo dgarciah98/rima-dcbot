@@ -18,7 +18,7 @@ You will need to provide your token in your .env, using the example.env provided
 
 ### Docker
 
-You may use the `deploy` script to build and run the Docker image.
+You may use the Makefile (`make`) to build and run the Docker image.
 
 You will also need to set up the .env.
 
@@ -29,7 +29,5 @@ You will need to make yourself a bot application in the Discord Developer Portal
 ```
  BOT_TOKEN="token"
  JSON_PATH="data/example.wordplays.json"
- BLACKLIST_PATH="data/example.blacklist.json"
- WEIGHTS_PATH="data/example.weights.json"
  CHANGELOG_PATH="example.changelog.txt"
 ```
