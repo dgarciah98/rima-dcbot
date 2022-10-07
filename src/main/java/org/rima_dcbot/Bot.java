@@ -20,24 +20,22 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Bot implements CommandLineRunner {
+
+  @Autowired	
   private OptionsRepository optionRepo;
-  private JsonLoader loader;
-  private Dotenv dotenv;
-
+  
   @Autowired
-  public Bot(JsonLoader loader, OptionsRepository optionRepo) {
-    this.optionRepo = optionRepo;
-    this.loader = loader;
-    this.dotenv = Dotenv.load();
-  }
-
+  private JsonLoader loader;
+  
+  @Autowired
+  private Dotenv dotenv;
+  
   @Override
   public void run(String... args) throws Exception {
     main(args);
   }
   
   public void main(String[] args) throws LoginException, InterruptedException {
-    //Dotenv dotenv = Dotenv.load();
     JDA bot = JDABuilder.createLight(
         dotenv.get("BOT_TOKEN"),
         GatewayIntent.GUILD_MESSAGES,
