@@ -1,10 +1,8 @@
 package org.rima_dcbot.utils;
 
-import net.dv8tion.jda.api.entities.Message;
 import org.rima_dcbot.configuration.ConfigurationUtil;
 
 import java.text.Normalizer;
-import java.util.Locale;
 
 public class Utils {
 	public static String normalizeText(String text) {

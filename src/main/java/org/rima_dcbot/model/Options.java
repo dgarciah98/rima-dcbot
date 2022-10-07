@@ -2,7 +2,6 @@ package org.rima_dcbot.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.rima_dcbot.configuration.ConfigurationUtil;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

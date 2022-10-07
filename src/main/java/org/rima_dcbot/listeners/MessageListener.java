@@ -1,13 +1,9 @@
 package org.rima_dcbot.listeners;
 
-import java.io.IOException;
-import java.text.Normalizer;
 import java.util.*;
 
 import javax.annotation.Nonnull;
 
-import org.rima_dcbot.bean.DiscordUser;
-import org.rima_dcbot.configuration.ConfigurationUtil;
 import org.rima_dcbot.crud.OptionsRepository;
 import org.rima_dcbot.loader.JsonLoader;
 
