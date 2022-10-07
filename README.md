@@ -10,7 +10,7 @@ You may run `gradlew` to build the JAR and then run the builded app to run the b
 
 
 ```bash
-$ ./gradlew jar
+$ ./gradlew bootJar
 $ java -jar -Xms64m -Xmx64m rima-dcbot.jar
 ```
 
