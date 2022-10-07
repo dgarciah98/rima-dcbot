@@ -6,6 +6,8 @@ build/
 .env
 data/wordplays.json
 changelog.txt
+changelog.txt.lck
+db/options.db
 
 ### IntelliJ IDEA ###
 .idea/gradle.xml
