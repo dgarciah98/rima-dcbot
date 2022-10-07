@@ -1,6 +1,7 @@
 package org.rima_dcbot.configuration;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -34,7 +35,7 @@ public class ConfigurationUtil {
 			if (changelogPath != null) {
 				try {
 					changelogFileHandler = new FileHandler(changelogPath, true);
-					changelogFileHandler.setFormatter(new ChangelogFormatter());
+					changelogFileHandler.setFormatter(new ChangelogFormatter(getLoggerTimezoneId()));
 					changelogLogger.addHandler(changelogFileHandler);
 					changelogLogger.setUseParentHandlers(false);
 				} catch (SecurityException e) {
@@ -54,11 +55,17 @@ public class ConfigurationUtil {
 		if (standardLogger == null) {
 			standardLogger = Logger.getLogger("standard-logger");
 			ConsoleHandler handler = new ConsoleHandler();
-			handler.setFormatter(new StandardLoggerFormatter());
+			handler.setFormatter(new StandardLoggerFormatter(getLoggerTimezoneId()));
 			standardLogger.addHandler(handler);
 			standardLogger.setUseParentHandlers(false);
 		}
 		
 		return standardLogger;
+	}
+	
+	private ZoneId getLoggerTimezoneId() {
+		String timezone = getProperty("LOGGER_TIMEZONE");
+		if (timezone != null) return ZoneId.of(timezone);
+		return ZoneId.of("UTC");
 	}
 }
