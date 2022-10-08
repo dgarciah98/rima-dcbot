@@ -22,7 +22,7 @@ public class StandardLoggerFormatter extends AbstractLoggerFormatter {
 		sb.append("[");
 		sb.append(record.getLevel());
 		sb.append(" ");
-        sb.append(Instant.ofEpochMilli(record.getMillis()).atZone(zoneId).format(DateTimeFormatter.ofPattern("[dd-MM-yyyy HH:mm:ss Z]")));
+        sb.append(Instant.ofEpochMilli(record.getMillis()).atZone(zoneId).format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss Z")));
 		sb.append("] ");
 		sb.append(record.getMessage());
 		sb.append("\n");
