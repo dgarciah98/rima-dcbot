@@ -20,23 +20,22 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Bot implements CommandLineRunner {
-  private static OptionsRepository optionRepo;
-  private static JsonLoader loader;
-  private static Dotenv dotenv;
 
+  @Autowired	
+  private OptionsRepository optionRepo;
+  
   @Autowired
-  private Bot(JsonLoader loader, OptionsRepository optionRepo) {
-    this.optionRepo = optionRepo;
-    this.loader = loader;
-    this.dotenv = Dotenv.load();
-  }
-
+  private JsonLoader loader;
+  
+  @Autowired
+  private Dotenv dotenv;
+  
   @Override
-  public void run(String[] args) throws Exception {
+  public void run(String... args) throws Exception {
     main(args);
   }
-  public static void main(String[] args) throws LoginException, InterruptedException {
-    //Dotenv dotenv = Dotenv.load();
+  
+  public void main(String[] args) throws LoginException, InterruptedException {
     JDA bot = JDABuilder.createLight(
         dotenv.get("BOT_TOKEN"),
         GatewayIntent.GUILD_MESSAGES,
@@ -54,7 +53,7 @@ public class Bot implements CommandLineRunner {
     bot.awaitReady();
   }
   
-  static void upsertBotCommands(JDA bot) {
+  private void upsertBotCommands(JDA bot) {
     OptionData percentage = new OptionData(OptionType.INTEGER, "percentage", "Percentage as a number, without symbol, between 0-100", true);
     percentage.setRequiredRange(0L, 100L);
   

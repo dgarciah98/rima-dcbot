@@ -30,4 +30,7 @@ You will need to make yourself a bot application in the Discord Developer Portal
  BOT_TOKEN="token"
  JSON_PATH="data/example.wordplays.json"
  CHANGELOG_PATH="example.changelog.txt"
+ LOGGER_TIMEZONE="UTC+2"
 ```
+
+Note: if `LOGGER_TIMEZONE` is not provided the changelog and standard loggers timestamps will default to UTC.
