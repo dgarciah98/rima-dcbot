@@ -76,12 +76,19 @@ public class Bot implements CommandLineRunner {
       .queue();
     bot.upsertCommand("ignoreme",
       "Toggles between the bot responding or not responding to you").queue();
-    bot.upsertCommand("mychance",
+    bot.upsertCommand("setchance",
         "Add a percentage chance of the bot responding to you (e.g. 10, 50, 75 ...)")
       .addOptions(percentage)
       .queue();
-    bot.upsertCommand("forgetmychance",
+    bot.upsertCommand("forgetchance",
         "Remove your custom chance for getting bot responses")
+      .queue();
+    bot.upsertCommand("settimeout",
+        "Add a time interval where the bot won't reply after its last response (in seconds)")
+      .addOption(OptionType.INTEGER, "timeout", "Time in seconds", true)
+      .queue();
+    bot.upsertCommand("forgettimeout",
+        "Remove your custom timeout")
       .queue();
     bot.upsertCommand("changelog",
         "See the changelog")

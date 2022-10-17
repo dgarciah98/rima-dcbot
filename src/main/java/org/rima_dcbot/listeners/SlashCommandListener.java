@@ -44,8 +44,10 @@ public class SlashCommandListener extends ListenerAdapter {
 			case "new" -> newCommand(event);
 			case "remove" -> removeCommand(event);
 			case "ignoreme" -> ignoreMeCommand(event);
-			case "mychance" -> setChanceCommand(event);
-			case "forgetmychance" -> forgetChanceCommand(event);
+			case "setchance" -> setChanceCommand(event);
+			case "forgetchance" -> forgetChanceCommand(event);
+			case "settimeout" -> setTimeoutCommand(event);
+			case "forgettimeout" -> forgetTimeoutCommand(event);
 			case "changelog" -> event.replyFile(changelogFile).setEphemeral(true).queue();
 			case "help" -> helpCommand(event);
 		}
@@ -161,26 +163,63 @@ public class SlashCommandListener extends ListenerAdapter {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	void forgetChanceCommand(SlashCommandInteractionEvent event) {
 		try {
 			int defaultPercentage = (int) Utils.getDefaultWeight()* 100;
 			
 			Optional<Options> userOptions = optionsRepo.findById(event.getUser().getId());
 			if(userOptions.isEmpty()) {
-				Options newOptions = new Options(
-					event.getUser().getId(),
-					event.getUser().getName(),
-					event.getUser().getDiscriminator(),
-					defaultPercentage/100.0
-				);
-				optionsRepo.save(newOptions);
-				userOptions = Optional.of(newOptions);
+				event.reply("No tienes una probabilidad registrada, no haré nada")
+					.setEphemeral(true).queue();
 			}
 			else userOptions.get().setChanceWeight(defaultPercentage/100.0);
 			optionsRepo.save(userOptions.get());
 			event.reply("Ya no tienes una probabilidad registrada. "
 					+ "Te responderé el " + defaultPercentage + "% de las veces (valor por defecto)")
+				.setEphemeral(true).queue();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+
+	void setTimeoutCommand(SlashCommandInteractionEvent event) {
+		try {
+			Optional<Options> userOptions = optionsRepo.findById(event.getUser().getId());
+			if(userOptions.isEmpty()) {
+				Options newOptions = new Options(
+					event.getUser().getId(),
+					event.getUser().getName(),
+					event.getUser().getDiscriminator(),
+					Utils.getDefaultWeight()
+				);
+				optionsRepo.save(newOptions);
+				userOptions = Optional.of(newOptions);
+			}
+			int timeout = event.getOption("timeout").getAsInt();
+
+			userOptions.get().setTimeout(timeout);
+			optionsRepo.save(userOptions.get());
+			event.reply("Te responderé cuando pasen "
+				+ timeout + " segundos tras mi última respuesta").setEphemeral(true).queue();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+
+	void forgetTimeoutCommand(SlashCommandInteractionEvent event) {
+		try {
+			Optional<Options> userOptions = optionsRepo.findById(event.getUser().getId());
+			if(userOptions.isEmpty()) {
+				event.reply("No tienes una probabilidad registrada, no haré nada")
+					.setEphemeral(true).queue();
+			}
+			else userOptions.get().setTimeout(0);
+			optionsRepo.save(userOptions.get());
+			event.reply("Ya no tienes un tiempo de espera registrado. "
+					+ "Te responderé siempre que pueda (valor por defecto)")
 				.setEphemeral(true).queue();
 		} catch (Exception e) {
 			e.printStackTrace();

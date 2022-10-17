@@ -1,6 +1,9 @@
 package org.rima_dcbot.listeners;
 
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.annotation.Nonnull;
 
@@ -12,6 +15,9 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.rima_dcbot.model.Options;
 import org.rima_dcbot.utils.Utils;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,12 +27,16 @@ public class MessageListener extends ListenerAdapter {
 	private Random rand;
 	private double defaultWeight;
 
+	private ArrayList<String> ignoredByTimeout;
+	private TaskScheduler scheduler;
+
 	public MessageListener(JsonLoader loader, OptionsRepository optionsRepo) {
 		super();
 		this.loader = loader;
 		this.optionsRepo = optionsRepo;
 		rand = new Random();
 		defaultWeight = Utils.getDefaultWeight();
+		ignoredByTimeout = new ArrayList<String>();
 	}
 	
 	@Override
@@ -35,13 +45,15 @@ public class MessageListener extends ListenerAdapter {
 			try {
 				Optional<Options> userOptions = optionsRepo.findById(event.getAuthor().getId());
 				double roll = rand.nextDouble();
-				if (userOptions.isPresent() && !userOptions.get().getIsIgnored()) {
+
+				if (ignoredByTimeout.contains(event.getAuthor().getId())) return;
+				else if (userOptions.isPresent() && !userOptions.get().getIsIgnored()) {
 					double weight = userOptions.get().getChanceWeight();
 					if (weight != 1.0 && roll > weight) return;
 				}
 				else if (userOptions.isPresent() && userOptions.get().getIsIgnored()) return;
 				else if (roll > defaultWeight) return;
-				
+
 				Message msg = event.getMessage();
 				Map<String, List<String>> json = loader.loadWordplays();
 
@@ -53,8 +65,8 @@ public class MessageListener extends ListenerAdapter {
 				if(text.startsWith("http") || word.startsWith("http")) return;
 
 				List<String> results = json.keySet().stream().filter(key ->
-				text.equals(key) || word.equals(key) || word.endsWith(key)
-						).toList();
+					text.equals(key) || word.equals(key) || word.endsWith(key)
+				).toList();
 				if(!results.isEmpty()) {
 					String key = results.stream().findFirst().get();
 					// filter might find words that end with the same suffix, but you want a specific suffix/word
@@ -64,11 +76,31 @@ public class MessageListener extends ListenerAdapter {
 						key = results.get(results.indexOf(word));
 					List<String> res = json.get(key);
 					event.getChannel().sendMessage(res.get(new Random().nextInt(res.size()))).queue();
+
+					if (userOptions.isPresent()
+						&& userOptions.get().getTimeout() > 0
+						&& !ignoredByTimeout.contains(userOptions.get().getDiscordId())
+					) {
+						activateUserTimeout(userOptions.get().getDiscordId(), userOptions.get().getTimeout());
+					}
 				}
 			} catch (Exception e) {
 				System.out.println("Error reading file: " + e);
 				throw new RuntimeException(e);
 			}
 		}
+	}
+
+	@Async
+	public void activateUserTimeout(String discordId, int timeout){
+		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+		scheduler = new ConcurrentTaskScheduler(executor);
+		ignoredByTimeout.add(discordId);
+
+		scheduler.schedule(
+			() -> ignoredByTimeout.remove(discordId),
+			new Date(System.currentTimeMillis() + (timeout * 1000L))
+		);
+
 	}
 }
