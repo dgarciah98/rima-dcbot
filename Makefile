@@ -10,6 +10,8 @@ docker-remove:
 	docker rm rima-bot
 
 docker-build:
+    sh ./db/create-db.sh
+    if [ -f options.db ]; then mv options.db db/.; fi
 	docker build --no-cache -f Dockerfile -t rima-bot .
 
 docker-run:
