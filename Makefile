@@ -13,4 +13,4 @@ docker-build:
 	docker build --no-cache -f Dockerfile -t rima-bot .
 
 docker-run:
-	docker run --restart on-failure --name rima-bot -dit -v ~/rima-dcbot/data:/rima-dcbot/data rima-bot
+	docker run --restart on-failure --name rima-bot -dit -v ~/rima-dcbot/data:/rima-dcbot/data -v ~/rima-dcbot/db:/rima-dcbot/db rima-bot
