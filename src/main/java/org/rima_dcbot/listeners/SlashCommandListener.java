@@ -251,8 +251,10 @@ public class SlashCommandListener extends ListenerAdapter {
 			`/new <suffix> <wordplay>` - Adds a new wordplay using a suffix
 			`/remove <suffix>` - Removes an existing wordplay using a suffix
 			`/ignoreme` - Toggles between the bot responding or not responding to you
-			`/mychance <percentage>` - Add a percentage chance of the bot responding to you (e.g. 10, 50, 75 ...)
-			`/forgetmychance` - Remove your custom chance for getting bot responses
+			`/setchance <percentage>` - Add a percentage chance of the bot responding to you (e.g. 10, 50, 75 ...)
+			`/forgetchance` - Remove your custom chance for getting bot responses
+			`/settimeout <timeout>` - Add a time interval where the bot won't reply after its last response (in seconds)
+			`/forgettimeout` - Remove your custom timeout
 			`/changelog` - See the changelog
 			""").setEphemeral(true).queue();
 	}
