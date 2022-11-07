@@ -1,24 +1,28 @@
 package org.rima_dcbot.listeners;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import javax.annotation.Nonnull;
 
 import org.rima_dcbot.crud.OptionsRepository;
 import org.rima_dcbot.loader.JsonLoader;
-
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.rima_dcbot.model.Options;
 import org.rima_dcbot.utils.Utils;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.stereotype.Component;
+
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 @Component
 public class MessageListener extends ListenerAdapter {
@@ -37,6 +41,7 @@ public class MessageListener extends ListenerAdapter {
 		rand = new Random();
 		defaultWeight = Utils.getDefaultWeight();
 		ignoredByTimeout = new ArrayList<String>();
+		scheduler = new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor());
 	}
 	
 	@Override
@@ -93,14 +98,11 @@ public class MessageListener extends ListenerAdapter {
 
 	@Async
 	public void activateUserTimeout(String discordId, int timeout){
-		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-		scheduler = new ConcurrentTaskScheduler(executor);
 		ignoredByTimeout.add(discordId);
 
 		scheduler.schedule(
 			() -> ignoredByTimeout.remove(discordId),
-			new Date(System.currentTimeMillis() + (timeout * 1000L))
+			Instant.now().plusMillis(timeout * 1000L)
 		);
-
 	}
 }
